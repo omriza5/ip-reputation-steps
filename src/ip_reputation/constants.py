@@ -5,25 +5,31 @@ Defines status codes, risk levels, thresholds, and API configuration.
 
 from enum import Enum
 
+
 class StatusCode(Enum):
     """Step execution status codes."""
+
     SUCCESS = 0
     VALIDATION_ERROR = 1
     API_ERROR = 2
+
 
 class StatusMessage(Enum):
     SUCCESS = "success"
     PARTIAL_SUCCESS = "partial_success"
     FAILED = "failed"
-    
+
+
 class RiskLevel(Enum):
     """IP address risk classification levels."""
+
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
 
+
 # Minimum score for MEDIUM risk
-RISK_THRESHOLD_MEDIUM = 25 
+RISK_THRESHOLD_MEDIUM = 25
 
 # Threshold Validation
 MIN_CONFIDENCE_THRESHOLD = RISK_THRESHOLD_MEDIUM
