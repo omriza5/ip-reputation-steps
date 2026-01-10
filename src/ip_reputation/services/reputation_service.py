@@ -2,7 +2,6 @@
 Reputation service for IP address risk assessment.
 """
 
-from typing import Optional
 from ip_reputation.api.client import AbuseIPDBClient
 from ip_reputation.models import ReputationData
 from ip_reputation.constants import RiskLevel, RISK_THRESHOLD_MEDIUM
