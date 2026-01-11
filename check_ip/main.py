@@ -1,0 +1,162 @@
+"""
+Single IP reputation checker CLI.
+Checks reputation of a single IP address using AbuseIPDB API.
+"""
+
+import os
+import sys
+import json
+from typing import Tuple, Dict, Any
+
+from ip_reputation.api.client import AbuseIPDBClient
+from ip_reputation.services.reputation_service import ReputationService
+from ip_reputation.utils.validators import (
+    validate_ip_address,
+    validate_confidence_threshold,
+)
+from ip_reputation.constants import (
+    StatusCode,
+    StatusMessage,
+    DEFAULT_CONFIDENCE_THRESHOLD,
+    MIN_CONFIDENCE_THRESHOLD,
+    MAX_CONFIDENCE_THRESHOLD,
+)
+from ip_reputation.exceptions import ValidationError, APIError
+from ip_reputation.models import ReputationData
+
+
+def read_and_validate_inputs() -> Tuple[str, str, int]:
+    """
+    Read and validate environment variables.
+
+    Returns:
+        Tuple of (ip_address, api_key, confidence_threshold)
+
+    Raises:
+        ValidationError: If inputs are missing or invalid
+    """
+    # Read environment variables
+    ip_address = os.getenv("IP_ADDRESS")
+    api_key = os.getenv("ABUSEIPDB_API_KEY")
+    threshold_str = os.getenv("CONFIDENCE_THRESHOLD", str(DEFAULT_CONFIDENCE_THRESHOLD))
+
+    # Validate required inputs
+    if not api_key:
+        raise ValidationError("ABUSEIPDB_API_KEY environment variable is required")
+
+    if not ip_address:
+        raise ValidationError("IP_ADDRESS environment variable is required")
+
+    # Validate IP address
+    ip_address = validate_ip_address(ip_address)
+
+    # Validate and convert threshold
+    try:
+        confidence_threshold = int(threshold_str)
+    except ValueError:
+        raise ValidationError(
+            f"CONFIDENCE_THRESHOLD must be a number, got: {threshold_str}"
+        )
+
+    confidence_threshold = validate_confidence_threshold(
+        confidence_threshold,
+        min_value=MIN_CONFIDENCE_THRESHOLD,
+        max_value=MAX_CONFIDENCE_THRESHOLD,
+    )
+
+    return ip_address, api_key, confidence_threshold
+
+
+def build_success_response(reputation_data: ReputationData) -> Dict[str, Any]:
+    """
+    Build success JSON response.
+
+    Args:
+        reputation_data: ReputationData object from service
+
+    Returns:
+        Dictionary containing success response
+    """
+    return {
+        "step_status": {
+            "code": StatusCode.SUCCESS.value,
+            "message": StatusMessage.SUCCESS.value,
+        },
+        "api_object": {
+            "ip": reputation_data.ip,
+            "risk_level": reputation_data.risk_level,
+            "abuse_confidence_score": reputation_data.abuse_confidence_score,
+            "total_reports": reputation_data.total_reports,
+            "country_code": reputation_data.country_code,
+            "isp": reputation_data.isp,
+            "is_public": reputation_data.is_public,
+        },
+    }
+
+
+def build_error_response(error: Exception, status_code: StatusCode) -> Dict[str, Any]:
+    """
+    Build error JSON response.
+
+    Args:
+        error: Exception that occurred
+        status_code: StatusCode enum value
+
+    Returns:
+        Dictionary containing error response
+    """
+    return {
+        "step_status": {
+            "code": status_code.value,
+            "message": StatusMessage.FAILED.value,
+        },
+        "api_object": {"error": str(error)},
+    }
+
+
+def handle_error(error: Exception, status_code: StatusCode) -> None:
+    """
+    Handle error by printing JSON response and exiting.
+
+    Args:
+        error: Exception that occurred
+        status_code: StatusCode enum value
+    """
+    response = build_error_response(error, status_code)
+    print(json.dumps(response, indent=2))
+    sys.exit(status_code.value)
+
+
+def main():
+    """Main entry point for single IP checker."""
+    try:
+        # Read and validate inputs
+        ip_address, api_key, confidence_threshold = read_and_validate_inputs()
+
+        # Create API client and service
+        api_client = AbuseIPDBClient(api_key=api_key)
+        service = ReputationService(api_client=api_client)
+
+        # Check IP reputation
+        reputation_data = service.check_ip(
+            ip_address=ip_address, confidence_threshold=confidence_threshold
+        )
+
+        # Build and print success response
+        response = build_success_response(reputation_data)
+        print(json.dumps(response, indent=2))
+        sys.exit(0)
+
+    except ValidationError as e:
+        handle_error(e, StatusCode.VALIDATION_ERROR)
+
+    except APIError as e:
+        handle_error(e, StatusCode.API_ERROR)
+
+    except Exception as e:
+        error = Exception(f"Unexpected error: {str(e)}")
+        handle_error(error, StatusCode.API_ERROR)
+
+
+if __name__ == "__main__":
+    main()
