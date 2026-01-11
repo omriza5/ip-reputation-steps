@@ -17,6 +17,7 @@ from ip_reputation.models import ReputationData
 from ip_reputation.constants import StatusCode, StatusMessage
 from ip_reputation.exceptions import ValidationError, APIError
 
+
 class TestReadAndValidateInputs:
     """Tests for read_and_validate_inputs function (batch)."""
 
@@ -80,6 +81,7 @@ class TestReadAndValidateInputs:
         ips, key, threshold = read_and_validate_inputs()
         assert threshold == 70
 
+
 class TestProcessIPBatch:
     """Tests for process_ip_batch function."""
 
@@ -87,16 +89,35 @@ class TestProcessIPBatch:
         # Mock service: first IP returns data, second raises ValidationError, third raises APIError
         service = Mock()
         service.check_ip.side_effect = [
-            ReputationData(ip="8.8.8.8", risk_level="LOW", abuse_confidence_score=0, total_reports=0, country_code="US", isp="Google LLC", is_public=True),
+            ReputationData(
+                ip="8.8.8.8",
+                risk_level="LOW",
+                abuse_confidence_score=0,
+                total_reports=0,
+                country_code="US",
+                isp="Google LLC",
+                is_public=True,
+            ),
             APIError("API failed"),
-            ReputationData(ip="1.1.1.1", risk_level="LOW", abuse_confidence_score=0, total_reports=0, country_code="AU", isp="Cloudflare, Inc.", is_public=True),
+            ReputationData(
+                ip="1.1.1.1",
+                risk_level="LOW",
+                abuse_confidence_score=0,
+                total_reports=0,
+                country_code="AU",
+                isp="Cloudflare, Inc.",
+                is_public=True,
+            ),
         ]
         ip_addresses = ["8.8.8.8", "118.25.6.39", "1.1.1.1"]
         confidence_threshold = 50
-        results, validation_errors, api_errors = process_ip_batch(service, ip_addresses, confidence_threshold)
+        results, validation_errors, api_errors = process_ip_batch(
+            service, ip_addresses, confidence_threshold
+        )
         assert "8.8.8.8" in results
         assert "1.1.1.1" in results
         assert "118.25.6.39" in api_errors or "118.25.6.39" in validation_errors
+
 
 class TestCalculateSummary:
     """Tests for calculate_summary function."""
@@ -115,15 +136,19 @@ class TestCalculateSummary:
         assert summary["risk_counts"]["HIGH"] == 1
         assert summary["risk_counts"]["LOW"] == 2
 
+
 class TestDetermineStatusMessage:
     """Tests for determine_status_message function."""
 
     def test_success(self):
         assert determine_status_message(3, 0) == "success"
+
     def test_partial_success(self):
         assert determine_status_message(2, 1) == "partial_success"
+
     def test_failed(self):
         assert determine_status_message(0, 2) == "failed"
+
 
 class TestBuildResponse:
     """Tests for build_response function."""
