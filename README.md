@@ -191,12 +191,43 @@ docker run --rm \
 ## Project Structure
 
 ```
-check_ip/           # Single IP check CLI tool
-check_ip_batch/     # Batch IP check CLI tool
-src/ip_reputation/  # Core logic, API client, services, utils
-Dockerfile          # Docker build instructions
-requirements.txt    # Python dependencies
-tests/              # Unit tests
+ip-reputation-steps/
+├── check_ip/
+│   ├── __init__.py
+│   └── main.py
+├── check_ip_batch/
+│   ├── __init__.py
+│   └── main.py
+├── src/
+│   └── ip_reputation/
+│       ├── __init__.py
+│       ├── constants.py
+│       ├── exceptions.py
+│       ├── models.py
+│       ├── api/
+│       │   ├── __init__.py
+│       │   └── client.py
+│       ├── services/
+│       │   ├── __init__.py
+│       │   └── reputation_service.py
+│       └── utils/
+│           ├── __init__.py
+│           ├── error_handling.py
+│           └── validators.py
+├── tests/
+│   ├── __init__.py
+│   └── unit/
+│       ├── __init__.py
+│       ├── test_check_ip_batch.py
+│       ├── test_check_ip.py
+│       ├── test_client.py
+│       ├── test_reputation_service.py
+│       └── test_validators.py
+├── Dockerfile
+├── pytest.ini
+├── README.md
+├── requirements-dev.txt
+├── requirements.txt
 ```
 
 ---
