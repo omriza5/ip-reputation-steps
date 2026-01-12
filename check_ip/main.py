@@ -6,7 +6,7 @@ Checks reputation of a single IP address using AbuseIPDB API.
 import os
 import sys
 import json
-from typing import Tuple, Dict, Any
+from ip_reputation.utils.error_handling import handle_error
 
 from ip_reputation.api.client import AbuseIPDBClient
 from ip_reputation.services.reputation_service import ReputationService
@@ -26,11 +26,10 @@ from ip_reputation.models import (
     ReputationData,
     StepStatus,
     SingleIPResponse,
-    ErrorResponse,
 )
 
 
-def read_and_validate_inputs() -> Tuple[str, str, int]:
+def read_and_validate_inputs() -> tuple[str, str, int]:
     """
     Read and validate environment variables.
 
@@ -90,40 +89,6 @@ def build_success_response(reputation_data: ReputationData) -> dict:
         api_object=reputation_data,
     )
     return response.model_dump()
-
-
-def build_error_response(error: Exception, status_code: StatusCode) -> Dict[str, Any]:
-    """
-    Build error JSON response.
-
-    Args:
-        error: Exception that occurred
-        status_code: StatusCode enum value
-
-    Returns:
-        Dictionary containing error response
-    """
-    response = ErrorResponse(
-        step_status=StepStatus(
-            code=status_code.value,
-            message=StatusMessage.FAILED.value,
-        ),
-        error=str(error),
-    )
-    return response.model_dump()
-
-
-def handle_error(error: Exception, status_code: StatusCode) -> None:
-    """
-    Handle error by printing JSON response and exiting.
-
-    Args:
-        error: Exception that occurred
-        status_code: StatusCode enum value
-    """
-    response = build_error_response(error, status_code)
-    print(json.dumps(response, indent=2))
-    sys.exit(status_code.value)
 
 
 def main():
