@@ -231,9 +231,7 @@ def main():
 
         # Print JSON to stdout
         print(json.dumps(response, indent=2))
-
-        # Exit with appropriate code
-        sys.exit(response["step_status"]["code"])
+        sys.exit(0)
 
     except ValidationError as e:
         handle_error(e, StatusCode.VALIDATION_ERROR)
