@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains two robust, containerized Python command-line tools ("steps") for checking the reputation of IP addresses using the [AbuseIPDB](https://www.abuseipdb.com/) threat intelligence API.
+This application analyzes IP addresses using the [AbuseIPDB](https://www.abuseipdb.com/) service to identify whether they have been flagged for suspicious or harmful behavior.
 
 - **Step 1:** Check the reputation of a single IP address.
 - **Step 2:** Check the reputation of multiple IP addresses in batch mode, with summary reporting.

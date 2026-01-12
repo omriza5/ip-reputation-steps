@@ -52,7 +52,6 @@ class AbuseIPDBClient:
                 url, headers=headers, params=params, timeout=self.timeout
             )
 
-            # Handle specific HTTP errors
             if response.status_code == HTTPStatus.UNAUTHORIZED:
                 raise APIError("Authentication failed. Invalid API key.")
 
@@ -64,7 +63,6 @@ class AbuseIPDBClient:
                     f"API request failed with status {response.status_code}: {response.text}"
                 )
 
-            # Parse and return data
             data = response.json()
             return data.get("data", {})
 
