@@ -22,7 +22,12 @@ from ip_reputation.constants import (
     MAX_CONFIDENCE_THRESHOLD,
 )
 from ip_reputation.exceptions import ValidationError, APIError
-from ip_reputation.models import ReputationData, StepStatus, SingleIPResponse, ErrorResponse
+from ip_reputation.models import (
+    ReputationData,
+    StepStatus,
+    SingleIPResponse,
+    ErrorResponse,
+)
 
 
 def read_and_validate_inputs() -> Tuple[str, str, int]:

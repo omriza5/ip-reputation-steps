@@ -9,7 +9,13 @@ import json
 from typing import Tuple, Dict, Any, List
 
 from ip_reputation.api.client import AbuseIPDBClient
-from ip_reputation.models import BatchAPIObject, BatchIPResponse, BatchSummary, StepStatus
+from ip_reputation.models import (
+    BatchAPIObject,
+    BatchIPResponse,
+    BatchSummary,
+    ErrorResponse,
+    StepStatus,
+)
 from ip_reputation.services.reputation_service import ReputationService
 from ip_reputation.utils.validators import (
     validate_ip_address,
@@ -160,7 +166,10 @@ def determine_status_message(successful: int, failed: int) -> str:
 
 
 def build_response(
-    results: Dict[str, Dict], validation_errors: Dict[str, str], api_errors: Dict[str, str], total: int
+    results: Dict[str, Dict],
+    validation_errors: Dict[str, str],
+    api_errors: Dict[str, str],
+    total: int,
 ) -> Dict[str, Any]:
     """
     Build the complete batch response.
@@ -212,12 +221,15 @@ def main():
         api_client = AbuseIPDBClient(api_key=api_key)
         service = ReputationService(api_client=api_client)
 
-
         # Process all IPs
-        results, validation_errors, api_errors = process_ip_batch(service, ip_addresses, confidence_threshold)
+        results, validation_errors, api_errors = process_ip_batch(
+            service, ip_addresses, confidence_threshold
+        )
 
         # Build response
-        response = build_response(results, validation_errors, api_errors, len(ip_addresses))
+        response = build_response(
+            results, validation_errors, api_errors, len(ip_addresses)
+        )
 
         # Print JSON to stdout
         print(json.dumps(response, indent=2))
@@ -227,26 +239,26 @@ def main():
 
     except ValidationError as e:
         # All IPs failed validation
-        response = {
-            "step_status": {
-                "code": StatusCode.VALIDATION_ERROR.value,
-                "message": StatusMessage.FAILED.value,
-            },
-            "api_object": {"error": str(e)},
-        }
-        print(json.dumps(response, indent=2))
+        response = ErrorResponse(
+            step_status=StepStatus(
+                code=StatusCode.VALIDATION_ERROR.value,
+                message=StatusMessage.FAILED.value,
+            ),
+            error=str(e),
+        )
+        print(json.dumps(response.model_dump(), indent=2))
         sys.exit(1)
 
     except Exception as e:
         # Unexpected error
-        response = {
-            "step_status": {
-                "code": StatusCode.API_ERROR.value,
-                "message": StatusMessage.FAILED.value,
-            },
-            "api_object": {"error": f"Unexpected error: {str(e)}"},
-        }
-        print(json.dumps(response, indent=2))
+        response = ErrorResponse(
+            step_status=StepStatus(
+                code=StatusCode.API_ERROR.value,
+                message=StatusMessage.FAILED.value,
+            ),
+            error=f"Unexpected error: {str(e)}",
+        )
+        print(json.dumps(response.model_dump(), indent=2))
         sys.exit(2)
 
 
