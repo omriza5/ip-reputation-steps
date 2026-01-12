@@ -45,7 +45,7 @@ pip install -r requirements.txt
 export ABUSEIPDB_API_KEY="your-key-here"
 export IP_ADDRESS="118.25.6.39"
 # Optional: export CONFIDENCE_THRESHOLD="50"  # Default is 70
-python check_ip/main.py
+PYTHONPATH=src python check_ip/main.py
 ```
 
 #### Via Docker
@@ -93,7 +93,7 @@ docker run --rm \
 export ABUSEIPDB_API_KEY="your-key-here"
 export IP_ADDRESSES="118.25.6.39,8.8.8.8,invalid-ip,1.1.1.1"
 # Optional: export CONFIDENCE_THRESHOLD="50"  # Default is 70
-python check_ip_batch/main.py
+PYTHONPATH=src python check_ip_batch/main.py
 ```
 
 #### Via Docker
