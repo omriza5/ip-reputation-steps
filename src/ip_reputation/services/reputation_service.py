@@ -38,12 +38,6 @@ class ReputationService:
         Raises:
             APIError: If API request fails
         """
-        # Future: Check cache here
-        # if self.cache:
-        #     cached = self.cache.get(ip_address)
-        #     if cached:
-        #         return ReputationData(**cached)
-
         # Get data from API
         api_response = self.api_client.check_ip(ip_address, max_age_days)
 
@@ -61,10 +55,6 @@ class ReputationService:
             isp=api_response.get("isp", ""),
             is_public=api_response.get("isPublic", True),
         )
-
-        # Future: Store in cache
-        # if self.cache:
-        #     self.cache.set(ip_address, reputation_data.dict())
 
         return reputation_data
 

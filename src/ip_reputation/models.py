@@ -54,3 +54,8 @@ class BatchIPResponse(BaseModel):
 
     step_status: StepStatus
     api_object: BatchAPIObject
+
+
+class ErrorResponse(BaseModel):
+    step_status: StepStatus
+    error: str

@@ -22,7 +22,12 @@ from ip_reputation.constants import (
     MAX_CONFIDENCE_THRESHOLD,
 )
 from ip_reputation.exceptions import ValidationError, APIError
-from ip_reputation.models import ReputationData
+from ip_reputation.models import (
+    ReputationData,
+    StepStatus,
+    SingleIPResponse,
+    ErrorResponse,
+)
 
 
 def read_and_validate_inputs() -> Tuple[str, str, int]:
@@ -67,7 +72,7 @@ def read_and_validate_inputs() -> Tuple[str, str, int]:
     return ip_address, api_key, confidence_threshold
 
 
-def build_success_response(reputation_data: ReputationData) -> Dict[str, Any]:
+def build_success_response(reputation_data: ReputationData) -> dict:
     """
     Build success JSON response.
 
@@ -77,21 +82,14 @@ def build_success_response(reputation_data: ReputationData) -> Dict[str, Any]:
     Returns:
         Dictionary containing success response
     """
-    return {
-        "step_status": {
-            "code": StatusCode.SUCCESS.value,
-            "message": StatusMessage.SUCCESS.value,
-        },
-        "api_object": {
-            "ip": reputation_data.ip,
-            "risk_level": reputation_data.risk_level,
-            "abuse_confidence_score": reputation_data.abuse_confidence_score,
-            "total_reports": reputation_data.total_reports,
-            "country_code": reputation_data.country_code,
-            "isp": reputation_data.isp,
-            "is_public": reputation_data.is_public,
-        },
-    }
+    response = SingleIPResponse(
+        step_status=StepStatus(
+            code=StatusCode.SUCCESS.value,
+            message=StatusMessage.SUCCESS.value,
+        ),
+        api_object=reputation_data,
+    )
+    return response.model_dump()
 
 
 def build_error_response(error: Exception, status_code: StatusCode) -> Dict[str, Any]:
@@ -105,13 +103,14 @@ def build_error_response(error: Exception, status_code: StatusCode) -> Dict[str,
     Returns:
         Dictionary containing error response
     """
-    return {
-        "step_status": {
-            "code": status_code.value,
-            "message": StatusMessage.FAILED.value,
-        },
-        "api_object": {"error": str(error)},
-    }
+    response = ErrorResponse(
+        step_status=StepStatus(
+            code=status_code.value,
+            message=StatusMessage.FAILED.value,
+        ),
+        error=str(error),
+    )
+    return response.model_dump()
 
 
 def handle_error(error: Exception, status_code: StatusCode) -> None:

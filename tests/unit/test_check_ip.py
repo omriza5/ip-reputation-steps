@@ -138,7 +138,7 @@ class TestBuildErrorResponse:
 
         assert response["step_status"]["code"] == 1
         assert response["step_status"]["message"] == "failed"
-        assert response["api_object"]["error"] == "Invalid input"
+        assert response["error"] == "Invalid input"
 
     def test_api_error_response(self):
         """Test API error response structure."""
@@ -147,4 +147,4 @@ class TestBuildErrorResponse:
 
         assert response["step_status"]["code"] == 2
         assert response["step_status"]["message"] == "failed"
-        assert response["api_object"]["error"] == "API failed"
+        assert response["error"] == "API failed"
