@@ -38,14 +38,12 @@ class ReputationService:
         Raises:
             APIError: If API request fails
         """
-        # Get data from API
         api_response = self.api_client.check_ip(ip_address, max_age_days)
 
         # Calculate risk level
         abuse_score = api_response.get("abuseConfidenceScore", 0)
         risk_level = self._calculate_risk_level(abuse_score, confidence_threshold)
 
-        # Build ReputationData model
         reputation_data = ReputationData(
             ip=api_response.get("ipAddress", ip_address),
             risk_level=risk_level,
