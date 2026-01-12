@@ -9,6 +9,7 @@ import json
 from typing import Tuple, Dict, Any, List
 
 from ip_reputation.api.client import AbuseIPDBClient
+from ip_reputation.models import BatchAPIObject, BatchIPResponse, BatchSummary, StepStatus
 from ip_reputation.services.reputation_service import ReputationService
 from ip_reputation.utils.validators import (
     validate_ip_address,
@@ -173,25 +174,32 @@ def build_response(
     Returns:
         Complete response dictionary
     """
-    # Merge errors for output and summary
     all_errors = {**validation_errors, **api_errors}
-    summary = calculate_summary(total, results, all_errors)
-    # Only API errors count for status logic
-    api_failed = len(api_errors)
-    status_message = determine_status_message(summary["successful"], api_failed)
+    summary_dict = calculate_summary(total, results, all_errors)
+    summary = BatchSummary(**summary_dict)
+    status_message = determine_status_message(summary.successful, len(api_errors))
 
     # Determine status code
-    if api_failed == 0:
+    if len(api_errors) == 0:
         status_code = StatusCode.SUCCESS.value
-    elif summary["successful"] == 0 and api_failed > 0:
+    elif summary.successful == 0 and len(api_errors) > 0:
         status_code = StatusCode.API_ERROR.value
     else:
         status_code = StatusCode.SUCCESS.value
 
-    return {
-        "step_status": {"code": status_code, "message": status_message},
-        "api_object": {"summary": summary, "results": results, "errors": all_errors},
-    }
+    batch_api_object = BatchAPIObject(
+        summary=summary,
+        results=results,
+        errors=all_errors,
+    )
+    response = BatchIPResponse(
+        step_status=StepStatus(
+            code=status_code,
+            message=status_message,
+        ),
+        api_object=batch_api_object,
+    )
+    return response.model_dump()
 
 
 def main():
