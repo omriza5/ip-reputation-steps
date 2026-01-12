@@ -218,3 +218,16 @@ To run tests and contribute to development, install the development requirements
 pip install -r requirements-dev.txt
 pytest
 ```
+
+To generate and view an Allure HTML report locally:
+
+```bash
+# Run tests and collect Allure results
+pytest --alluredir=allure-results
+
+# Generate the HTML report
+allure generate allure-results -o allure-report --clean
+
+# Open the report in your browser
+allure open allure-report
+```
