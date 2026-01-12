@@ -6,16 +6,14 @@ Checks reputation of multiple IP addresses using AbuseIPDB API.
 import os
 import sys
 import json
-from typing import Tuple, Dict, Any, List
-
 from ip_reputation.api.client import AbuseIPDBClient
 from ip_reputation.models import (
     BatchAPIObject,
     BatchIPResponse,
     BatchSummary,
-    ErrorResponse,
     StepStatus,
 )
+from ip_reputation.utils.error_handling import handle_error
 from ip_reputation.services.reputation_service import ReputationService
 from ip_reputation.utils.validators import (
     validate_ip_address,
@@ -31,7 +29,7 @@ from ip_reputation.constants import (
 from ip_reputation.exceptions import ValidationError, APIError
 
 
-def read_and_validate_inputs() -> Tuple[List[str], str, int]:
+def read_and_validate_inputs() -> tuple[list[str], str, int]:
     """
     Read and validate environment variables for batch processing.
 
@@ -77,8 +75,8 @@ def read_and_validate_inputs() -> Tuple[List[str], str, int]:
 
 
 def process_ip_batch(
-    service: ReputationService, ip_addresses: List[str], confidence_threshold: int
-) -> Tuple[Dict[str, Dict], Dict[str, str]]:
+    service: ReputationService, ip_addresses: list[str], confidence_threshold: int
+) -> tuple[dict[str, dict], dict[str, str]]:
     """
     Process a batch of IP addresses.
 
@@ -121,8 +119,8 @@ def process_ip_batch(
 
 
 def calculate_summary(
-    total: int, results: Dict[str, Dict], errors: Dict[str, str]
-) -> Dict[str, Any]:
+    total: int, results: dict[str, dict], errors: dict[str, str]
+) -> dict[str, any]:
     """
     Calculate summary statistics for batch processing.
 
@@ -166,11 +164,11 @@ def determine_status_message(successful: int, failed: int) -> str:
 
 
 def build_response(
-    results: Dict[str, Dict],
-    validation_errors: Dict[str, str],
-    api_errors: Dict[str, str],
+    results: dict[str, dict],
+    validation_errors: dict[str, str],
+    api_errors: dict[str, str],
     total: int,
-) -> Dict[str, Any]:
+) -> dict[str, any]:
     """
     Build the complete batch response.
 
@@ -238,28 +236,13 @@ def main():
         sys.exit(response["step_status"]["code"])
 
     except ValidationError as e:
-        # All IPs failed validation
-        response = ErrorResponse(
-            step_status=StepStatus(
-                code=StatusCode.VALIDATION_ERROR.value,
-                message=StatusMessage.FAILED.value,
-            ),
-            error=str(e),
-        )
-        print(json.dumps(response.model_dump(), indent=2))
-        sys.exit(1)
+        handle_error(e, StatusCode.VALIDATION_ERROR)
+
+    except APIError as e:
+        handle_error(e, StatusCode.API_ERROR)
 
     except Exception as e:
-        # Unexpected error
-        response = ErrorResponse(
-            step_status=StepStatus(
-                code=StatusCode.API_ERROR.value,
-                message=StatusMessage.FAILED.value,
-            ),
-            error=f"Unexpected error: {str(e)}",
-        )
-        print(json.dumps(response.model_dump(), indent=2))
-        sys.exit(2)
+        handle_error(Exception(f"Unexpected error: {str(e)}"), StatusCode.API_ERROR)
 
 
 if __name__ == "__main__":

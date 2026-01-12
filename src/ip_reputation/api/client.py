@@ -4,7 +4,6 @@ AbuseIPDB API client.
 
 import httpx
 from http import HTTPStatus
-from typing import Dict, Any
 from ip_reputation.constants import (
     ABUSEIPDB_API_BASE_URL,
     ABUSEIPDB_CHECK_ENDPOINT,
@@ -28,7 +27,7 @@ class AbuseIPDBClient:
 
     def check_ip(
         self, ip_address: str, max_age_days: int = DEFAULT_MAX_AGE_DAYS
-    ) -> Dict[str, Any]:
+    ) -> dict[str, any]:
         """
         Check IP address reputation.
 

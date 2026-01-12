@@ -8,11 +8,11 @@ from unittest.mock import patch
 from check_ip.main import (
     read_and_validate_inputs,
     build_success_response,
-    build_error_response,
 )
 from ip_reputation.models import ReputationData
 from ip_reputation.constants import StatusCode
 from ip_reputation.exceptions import ValidationError
+from ip_reputation.utils.error_handling import build_error_response
 
 
 class TestReadAndValidateInputs:
