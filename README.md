@@ -13,15 +13,20 @@ Both steps output results in a clear, structured JSON format suitable for automa
 
 ## Getting Started
 
-### 1. Get an AbuseIPDB API Key
+### 1. AbuseIPDB API Key
 
-- Sign up for a free account at [AbuseIPDB](https://www.abuseipdb.com/)
-- Go to your dashboard (Account → API) and copy your API key
+- **For interview/demo convenience only:**
+
+  > **API Key:** `db624c41f015c4c8036fa8a086dfba678dc8bbcb5939af71e8089fb995444e4199823bc2336364ba`
+
+  ⚠️ **Warning:** This key is public for demonstration/interview purposes only. In real projects, always store API keys in secrets or environment variables, never in code or documentation.
+
+- To use your own key, sign up at [AbuseIPDB](https://www.abuseipdb.com/) and get your API key from the dashboard (Account → API).
 
 ### 2. Clone & Set Up the Project
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/omriza5/ip-reputation-steps
 cd ip-reputation-steps
 python3 -m venv .venv
 source .venv/bin/activate
@@ -53,7 +58,7 @@ docker run --rm \
 	check-ip check_ip/main.py
 ```
 
-### Output Example
+### Success Output Example
 
 ```json
 {
@@ -78,14 +83,6 @@ docker run --rm \
 | 1    | failed  | Input validation error (missing/invalid IP) |
 | 2    | failed  | API/network/auth/rate limit error           |
 
-### Risk Level Logic
-
-- **HIGH:** abuse_confidence_score >= CONFIDENCE_THRESHOLD
-- **MEDIUM:** 25 <= abuse_confidence_score < CONFIDENCE_THRESHOLD
-- **LOW:** abuse_confidence_score < 25
-
----
-
 ## Step 2: Check Multiple IPs (Batch)
 
 ### Usage
@@ -109,7 +106,7 @@ docker run --rm \
 	check-ip-batch check-ip-batch/main.py
 ```
 
-### Output Example
+### Success Output Example
 
 ```json
 {
@@ -160,26 +157,36 @@ docker run --rm \
 | 1    | failed          | Input validation error (no valid IPs) |
 | 2    | failed          | All API requests failed               |
 
-### Partial Failure Handling
-
-- If some IPs fail and others succeed:
-  - `message` is set to `partial_success`
-  - Successful results are in `results`
-  - Failures are in `errors`
-  - Summary counts are updated accordingly
-
----
-
 ## Test IPs
 
 | IP            | Expected Result       |
 | ------------- | --------------------- |
-| 118.25.6.39   | HIGH risk (malicious) |
+| 118.25.6.39   | LOW risk              |
 | 185.220.101.1 | HIGH risk (Tor exit)  |
 | 8.8.8.8       | LOW risk (Google DNS) |
 | 1.1.1.1       | LOW risk (Cloudflare) |
 
 ---
+
+## Error Response Examples
+
+1. **Validation Error Example**
+
+   ```json
+   {
+     "step_status": { "code": 1, "message": "failed" },
+     "error": "IP_ADDRESS environment variable is required"
+   }
+   ```
+
+2. **API Error Example**
+
+   ```json
+   {
+     "step_status": { "code": 2, "message": "failed" },
+     "error": "API request failed: Invalid API key or rate limit exceeded"
+   }
+   ```
 
 ## Project Structure
 
@@ -196,23 +203,18 @@ tests/              # Unit tests
 
 ## Development & Testing
 
-- All code is type-annotated and modular for maintainability.
-- Unit tests are provided in the `tests/` directory.
-- To run tests:
-  ```bash
-  pip install -r requirements-dev.txt
-  pytest
-  ```
+This project follows **PEP 8** conventions and uses **Ruff** for linting and **Black** for code formatting.
 
----
+To check and fix code style:
 
-## Support & Contributions
+```bash
+ruff check . --fix
+black .
+```
 
-- For questions, open an issue or contact the project maintainer.
-- Contributions are welcome! Please fork the repo and submit a pull request.
+To run tests and contribute to development, install the development requirements:
 
----
-
-## License
-
-This project is provided for educational and demonstration purposes. See LICENSE for details.
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
