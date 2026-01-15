@@ -5,14 +5,12 @@ Integration tests for single IP checker CLI.
 import pytest
 from unittest.mock import patch
 
-from check_ip.main import (
-    read_and_validate_inputs,
-    build_success_response,
-)
+from check_ip.main import read_and_validate_inputs
 from ip_reputation.models import ReputationData
 from ip_reputation.constants import StatusCode
 from ip_reputation.exceptions import ValidationError
 from ip_reputation.utils.error_handling import build_error_response
+from ip_reputation.services.reputation_service import ReputationService
 
 
 class TestReadAndValidateInputs:
@@ -119,7 +117,8 @@ class TestBuildSuccessResponse:
             is_public=True,
         )
 
-        response = build_success_response(reputation_data)
+        service = ReputationService(api_client=None)
+        response = service.build_single_ip_response(reputation_data)
 
         assert response["step_status"]["code"] == 0
         assert response["step_status"]["message"] == "success"
