@@ -5,6 +5,8 @@ Reputation service for IP address risk assessment.
 from ip_reputation.api.client import AbuseIPDBClient
 from ip_reputation.models import ReputationData
 from ip_reputation.constants import RiskLevel, RISK_THRESHOLD_MEDIUM
+from ip_reputation.utils.validators import validate_ip_address
+from ip_reputation.exceptions import ValidationError, APIError
 
 
 class ReputationService:
@@ -76,3 +78,40 @@ class ReputationService:
             return RiskLevel.MEDIUM.value
 
         return RiskLevel.LOW.value
+
+    def process_ip_batch(
+        self, ip_addresses: list[str], confidence_threshold: int
+    ) -> tuple[dict[str, dict], dict[str, str], dict[str, str]]:
+        """
+        Process a batch of IP addresses.
+
+        Args:
+            ip_addresses: List of IP addresses to check
+            confidence_threshold: Threshold for HIGH risk classification
+
+        Returns:
+            Tuple of (results_dict, validation_errors_dict, api_errors_dict)
+        """
+        results = {}
+        validation_errors = {}
+        api_errors = {}
+
+        for ip in ip_addresses:
+            try:
+                validated_ip = validate_ip_address(ip)
+                reputation_data = self.check_ip(validated_ip, confidence_threshold)
+                results[validated_ip] = {
+                    "risk_level": reputation_data.risk_level,
+                    "abuse_confidence_score": reputation_data.abuse_confidence_score,
+                    "total_reports": reputation_data.total_reports,
+                    "country_code": reputation_data.country_code,
+                    "isp": reputation_data.isp,
+                }
+            except ValidationError:
+                validation_errors[ip] = "Invalid IP address format"
+            except APIError as e:
+                api_errors[ip] = str(e)
+            except Exception as e:
+                api_errors[ip] = f"Unexpected error: {str(e)}"
+
+        return results, validation_errors, api_errors

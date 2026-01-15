@@ -8,7 +8,6 @@ from unittest.mock import patch, Mock
 
 from check_ip_batch.main import (
     read_and_validate_inputs,
-    process_ip_batch,
     calculate_summary,
     determine_status_message,
     build_response,
@@ -16,6 +15,7 @@ from check_ip_batch.main import (
 from ip_reputation.models import ReputationData
 from ip_reputation.constants import StatusCode, StatusMessage
 from ip_reputation.exceptions import ValidationError, APIError
+from ip_reputation.services.reputation_service import ReputationService
 
 
 class TestReadAndValidateInputs:
@@ -86,33 +86,37 @@ class TestProcessIPBatch:
     """Tests for process_ip_batch function."""
 
     def test_process_ip_batch_success_and_errors(self):
-        # Mock service: first IP returns data, second raises ValidationError, third raises APIError
-        service = Mock()
-        service.check_ip.side_effect = [
-            ReputationData(
-                ip="8.8.8.8",
-                risk_level="LOW",
-                abuse_confidence_score=0,
-                total_reports=0,
-                country_code="US",
-                isp="Google LLC",
-                is_public=True,
-            ),
-            APIError("API failed"),
-            ReputationData(
-                ip="1.1.1.1",
-                risk_level="LOW",
-                abuse_confidence_score=0,
-                total_reports=0,
-                country_code="AU",
-                isp="Cloudflare, Inc.",
-                is_public=True,
-            ),
-        ]
+        # Create a real ReputationService instance with a mock api_client
+        service = ReputationService(api_client=Mock())
+
+        # Patch the check_ip method
+        service.check_ip = Mock(
+            side_effect=[
+                ReputationData(
+                    ip="8.8.8.8",
+                    risk_level="LOW",
+                    abuse_confidence_score=0,
+                    total_reports=0,
+                    country_code="US",
+                    isp="Google LLC",
+                    is_public=True,
+                ),
+                APIError("API failed"),
+                ReputationData(
+                    ip="1.1.1.1",
+                    risk_level="LOW",
+                    abuse_confidence_score=0,
+                    total_reports=0,
+                    country_code="AU",
+                    isp="Cloudflare, Inc.",
+                    is_public=True,
+                ),
+            ]
+        )
         ip_addresses = ["8.8.8.8", "118.25.6.39", "1.1.1.1"]
         confidence_threshold = 50
-        results, validation_errors, api_errors = process_ip_batch(
-            service, ip_addresses, confidence_threshold
+        results, validation_errors, api_errors = service.process_ip_batch(
+            ip_addresses, confidence_threshold
         )
         assert "8.8.8.8" in results
         assert "1.1.1.1" in results

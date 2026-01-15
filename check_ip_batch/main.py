@@ -16,7 +16,6 @@ from ip_reputation.models import (
 from ip_reputation.utils.error_handling import handle_error
 from ip_reputation.services.reputation_service import ReputationService
 from ip_reputation.utils.validators import (
-    validate_ip_address,
     validate_confidence_threshold,
 )
 from ip_reputation.constants import (
@@ -72,50 +71,6 @@ def read_and_validate_inputs() -> tuple[list[str], str, int]:
     )
 
     return ip_addresses, api_key, confidence_threshold
-
-
-def process_ip_batch(
-    service: ReputationService, ip_addresses: list[str], confidence_threshold: int
-) -> tuple[dict[str, dict], dict[str, str]]:
-    """
-    Process a batch of IP addresses.
-
-    Args:
-        service: ReputationService instance
-        ip_addresses: List of IP addresses to check
-        confidence_threshold: Threshold for HIGH risk classification
-
-    Returns:
-        Tuple of (results_dict, errors_dict)
-    """
-    results = {}
-    validation_errors = {}
-    api_errors = {}
-
-    for ip in ip_addresses:
-        try:
-            # Validate IP format
-            validated_ip = validate_ip_address(ip)
-
-            # Check IP reputation
-            reputation_data = service.check_ip(validated_ip, confidence_threshold)
-
-            results[validated_ip] = {
-                "risk_level": reputation_data.risk_level,
-                "abuse_confidence_score": reputation_data.abuse_confidence_score,
-                "total_reports": reputation_data.total_reports,
-                "country_code": reputation_data.country_code,
-                "isp": reputation_data.isp,
-            }
-
-        except ValidationError:
-            validation_errors[ip] = "Invalid IP address format"
-        except APIError as e:
-            api_errors[ip] = str(e)
-        except Exception as e:
-            api_errors[ip] = f"Unexpected error: {str(e)}"
-
-    return results, validation_errors, api_errors
 
 
 def calculate_summary(
@@ -192,6 +147,7 @@ def build_response(
     elif summary.successful == 0 and len(api_errors) > 0:
         status_code = StatusCode.API_ERROR.value
     else:
+        # Cases for partial successes
         status_code = StatusCode.SUCCESS.value
 
     batch_api_object = BatchAPIObject(
@@ -217,11 +173,11 @@ def main():
 
         # Create API client and service
         api_client = AbuseIPDBClient(api_key=api_key)
-        service = ReputationService(api_client=api_client)
+        reputation_service = ReputationService(api_client=api_client)
 
         # Process all IPs
-        results, validation_errors, api_errors = process_ip_batch(
-            service, ip_addresses, confidence_threshold
+        results, validation_errors, api_errors = reputation_service.process_ip_batch(
+            ip_addresses, confidence_threshold
         )
 
         # Build response
