@@ -6,12 +6,7 @@ Follows the design and style of test_check_ip.py.
 import pytest
 from unittest.mock import patch, Mock
 
-from check_ip_batch.main import (
-    read_and_validate_inputs,
-    calculate_summary,
-    determine_status_message,
-    build_response,
-)
+from check_ip_batch.main import read_and_validate_inputs
 from ip_reputation.models import ReputationData
 from ip_reputation.constants import StatusCode, StatusMessage
 from ip_reputation.exceptions import ValidationError, APIError
@@ -133,7 +128,8 @@ class TestCalculateSummary:
             "118.25.6.39": {"risk_level": "HIGH"},
         }
         errors = {"invalid-ip": "Invalid IP address format"}
-        summary = calculate_summary(4, results, errors)
+        service = ReputationService(api_client=None)
+        summary = service._calculate_summary(4, results, errors)
         assert summary["total"] == 4
         assert summary["successful"] == 3
         assert summary["failed"] == 1
@@ -145,13 +141,16 @@ class TestDetermineStatusMessage:
     """Tests for determine_status_message function."""
 
     def test_success(self):
-        assert determine_status_message(3, 0) == "success"
+        service = ReputationService(api_client=None)
+        assert service._determine_status_message(3, 0) == "success"
 
     def test_partial_success(self):
-        assert determine_status_message(2, 1) == "partial_success"
+        service = ReputationService(api_client=None)
+        assert service._determine_status_message(2, 1) == "partial_success"
 
     def test_failed(self):
-        assert determine_status_message(0, 2) == "failed"
+        service = ReputationService(api_client=None)
+        assert service._determine_status_message(0, 2) == "failed"
 
 
 class TestBuildResponse:
@@ -165,7 +164,10 @@ class TestBuildResponse:
         }
         validation_errors = {"invalid-ip": "Invalid IP address format"}
         api_errors = {}
-        response = build_response(results, validation_errors, api_errors, 4)
+        service = ReputationService(api_client=None)
+        response = service.build_batch_ip_response(
+            results, validation_errors, api_errors, 4
+        )
         assert response["step_status"]["code"] == StatusCode.SUCCESS.value
         assert response["step_status"]["message"] == StatusMessage.SUCCESS.value
         assert response["api_object"]["summary"]["successful"] == 3
@@ -178,7 +180,10 @@ class TestBuildResponse:
         }
         validation_errors = {"invalid-ip": "Invalid IP address format"}
         api_errors = {"118.25.6.39": "API failed"}
-        response = build_response(results, validation_errors, api_errors, 3)
+        service = ReputationService(api_client=None)
+        response = service.build_batch_ip_response(
+            results, validation_errors, api_errors, 3
+        )
         assert response["step_status"]["code"] == StatusCode.SUCCESS.value
         assert response["step_status"]["message"] == StatusMessage.PARTIAL_SUCCESS.value
         assert response["api_object"]["summary"]["successful"] == 1

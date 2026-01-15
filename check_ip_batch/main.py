@@ -7,12 +7,6 @@ import os
 import sys
 import json
 from ip_reputation.api.client import AbuseIPDBClient
-from ip_reputation.models import (
-    BatchAPIObject,
-    BatchIPResponse,
-    BatchSummary,
-    StepStatus,
-)
 from ip_reputation.utils.error_handling import handle_error
 from ip_reputation.services.reputation_service import ReputationService
 from ip_reputation.utils.validators import (
@@ -20,7 +14,6 @@ from ip_reputation.utils.validators import (
 )
 from ip_reputation.constants import (
     StatusCode,
-    StatusMessage,
     DEFAULT_CONFIDENCE_THRESHOLD,
     MIN_CONFIDENCE_THRESHOLD,
     MAX_CONFIDENCE_THRESHOLD,
@@ -73,98 +66,6 @@ def read_and_validate_inputs() -> tuple[list[str], str, int]:
     return ip_addresses, api_key, confidence_threshold
 
 
-def calculate_summary(
-    total: int, results: dict[str, dict], errors: dict[str, str]
-) -> dict[str, any]:
-    """
-    Calculate summary statistics for batch processing.
-
-    Args:
-        total: Total number of IPs processed
-        results: Dictionary of successful results
-        errors: Dictionary of errors
-
-    Returns:
-        Summary dictionary with counts
-    """
-    risk_counts = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
-    for result in results.values():
-        risk_level = result.get("risk_level", "LOW")
-        risk_counts[risk_level] = risk_counts.get(risk_level, 0) + 1
-    return {
-        "total": total,
-        "successful": len(results),
-        "failed": len(errors),
-        "risk_counts": risk_counts,
-    }
-
-
-def determine_status_message(successful: int, failed: int) -> str:
-    """
-    Determine status message based on results.
-
-    Args:
-        successful: Number of successful checks
-        failed: Number of failed checks
-
-    Returns:
-        Status message: "success", "partial_success", or "failed"
-    """
-    if failed == 0:
-        return StatusMessage.SUCCESS.value
-    elif successful == 0:
-        return StatusMessage.FAILED.value
-    else:
-        return StatusMessage.PARTIAL_SUCCESS.value
-
-
-def build_response(
-    results: dict[str, dict],
-    validation_errors: dict[str, str],
-    api_errors: dict[str, str],
-    total: int,
-) -> dict[str, any]:
-    """
-    Build the complete batch response.
-
-    Args:
-        results: Dictionary of successful results
-        validation_errors: Dict of validation errors
-        api_errors: Dict of API errors
-        total: Total number of IPs
-
-    Returns:
-        Complete response dictionary
-    """
-    all_errors = {**validation_errors, **api_errors}
-    summary_dict = calculate_summary(total, results, all_errors)
-    summary = BatchSummary(**summary_dict)
-    status_message = determine_status_message(summary.successful, len(api_errors))
-
-    # Determine status code
-    if len(api_errors) == 0:
-        status_code = StatusCode.SUCCESS.value
-    elif summary.successful == 0 and len(api_errors) > 0:
-        status_code = StatusCode.API_ERROR.value
-    else:
-        # Cases for partial successes
-        status_code = StatusCode.SUCCESS.value
-
-    batch_api_object = BatchAPIObject(
-        summary=summary,
-        results=results,
-        errors=all_errors,
-    )
-    response = BatchIPResponse(
-        step_status=StepStatus(
-            code=status_code,
-            message=status_message,
-        ),
-        api_object=batch_api_object,
-    )
-    return response.model_dump()
-
-
 def main():
     """Main entry point for batch IP checker."""
     try:
@@ -181,7 +82,7 @@ def main():
         )
 
         # Build response
-        response = build_response(
+        response = reputation_service.build_batch_ip_response(
             results, validation_errors, api_errors, len(ip_addresses)
         )
 
