@@ -7,6 +7,8 @@ from ip_reputation.models import ReputationData
 from ip_reputation.constants import RiskLevel, RISK_THRESHOLD_MEDIUM
 from ip_reputation.utils.validators import validate_ip_address
 from ip_reputation.exceptions import ValidationError, APIError
+from ip_reputation.models import StepStatus, SingleIPResponse
+from ip_reputation.constants import StatusCode, StatusMessage
 
 
 class ReputationService:
@@ -139,6 +141,25 @@ class ReputationService:
             return StatusMessage.FAILED.value
         else:
             return StatusMessage.PARTIAL_SUCCESS.value
+
+    def build_single_ip_response(self, reputation_data: ReputationData) -> dict:
+        """
+        Build success JSON response for a single IP.
+
+        Args:
+            reputation_data: ReputationData object from service
+
+        Returns:
+            Dictionary containing success response
+        """
+        response = SingleIPResponse(
+            step_status=StepStatus(
+                code=StatusCode.SUCCESS.value,
+                message=StatusMessage.SUCCESS.value,
+            ),
+            api_object=reputation_data,
+        )
+        return response.model_dump()
 
     def build_batch_ip_response(
         self,

@@ -16,17 +16,11 @@ from ip_reputation.utils.validators import (
 )
 from ip_reputation.constants import (
     StatusCode,
-    StatusMessage,
     DEFAULT_CONFIDENCE_THRESHOLD,
     MIN_CONFIDENCE_THRESHOLD,
     MAX_CONFIDENCE_THRESHOLD,
 )
 from ip_reputation.exceptions import ValidationError, APIError
-from ip_reputation.models import (
-    ReputationData,
-    StepStatus,
-    SingleIPResponse,
-)
 
 
 def read_and_validate_inputs() -> tuple[str, str, int]:
@@ -71,26 +65,6 @@ def read_and_validate_inputs() -> tuple[str, str, int]:
     return ip_address, api_key, confidence_threshold
 
 
-def build_success_response(reputation_data: ReputationData) -> dict:
-    """
-    Build success JSON response.
-
-    Args:
-        reputation_data: ReputationData object from service
-
-    Returns:
-        Dictionary containing success response
-    """
-    response = SingleIPResponse(
-        step_status=StepStatus(
-            code=StatusCode.SUCCESS.value,
-            message=StatusMessage.SUCCESS.value,
-        ),
-        api_object=reputation_data,
-    )
-    return response.model_dump()
-
-
 def main():
     """Main entry point for single IP checker."""
     try:
@@ -99,15 +73,15 @@ def main():
 
         # Create API client and service
         api_client = AbuseIPDBClient(api_key=api_key)
-        service = ReputationService(api_client=api_client)
+        reputation_service = ReputationService(api_client=api_client)
 
         # Check IP reputation
-        reputation_data = service.check_ip(
+        reputation_data = reputation_service.check_ip(
             ip_address=ip_address, confidence_threshold=confidence_threshold
         )
 
         # Build and print success response
-        response = build_success_response(reputation_data)
+        response = reputation_service.build_single_ip_response(reputation_data)
         print(json.dumps(response, indent=2))
         sys.exit(0)
 
