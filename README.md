@@ -17,10 +17,6 @@ Both steps output results in a clear, structured JSON format suitable for automa
 
 - **For interview/demo convenience only:**
 
-  > **API Key:** `db624c41f015c4c8036fa8a086dfba678dc8bbcb5939af71e8089fb995444e4199823bc2336364ba`
-
-  ⚠️ **Warning:** This key is public for demonstration/interview purposes only. In real projects, always store API keys in secrets or environment variables, never in code or documentation.
-
 - To use your own key, sign up at [AbuseIPDB](https://www.abuseipdb.com/) and get your API key from the dashboard (Account → API).
 
 ### 2. Clone & Set Up the Project
