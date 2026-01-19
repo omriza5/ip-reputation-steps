@@ -15,8 +15,6 @@ Both steps output results in a clear, structured JSON format suitable for automa
 
 ### 1. AbuseIPDB API Key
 
-- **For interview/demo convenience only:**
-
 - To use your own key, sign up at [AbuseIPDB](https://www.abuseipdb.com/) and get your API key from the dashboard (Account → API).
 
 ### 2. Clone & Set Up the Project
