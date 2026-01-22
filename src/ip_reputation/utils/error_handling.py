@@ -18,4 +18,3 @@ def build_error_response(error: Exception, status_code) -> dict:
 def handle_error(error: Exception, status_code) -> None:
     response = build_error_response(error, status_code)
     print(json.dumps(response, indent=2))
-    sys.exit(status_code.value)

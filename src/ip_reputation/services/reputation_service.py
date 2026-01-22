@@ -179,15 +179,21 @@ class ReputationService:
         all_errors = {**validation_errors, **api_errors}
         summary_dict = self._calculate_summary(total, results, all_errors)
         summary = BatchSummary(**summary_dict)
-        status_message = self._determine_status_message(
-            summary.successful, len(api_errors)
-        )
+
+        # Determine status message
+        if summary.successful == 0:
+            status_message = StatusMessage.FAILED.value
+        else:
+            status_message = self._determine_status_message(summary.successful, len(api_errors))
 
         # Determine status code
-        if len(api_errors) == 0:
+        if summary.successful == 0:
+            if len(api_errors) > 0:
+                status_code = StatusCode.API_ERROR.value
+            else:
+                status_code = StatusCode.VALIDATION_ERROR.value
+        elif len(api_errors) == 0:
             status_code = StatusCode.SUCCESS.value
-        elif summary.successful == 0 and len(api_errors) > 0:
-            status_code = StatusCode.API_ERROR.value
         else:
             status_code = StatusCode.SUCCESS.value
 

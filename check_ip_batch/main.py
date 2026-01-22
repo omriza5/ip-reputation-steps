@@ -88,13 +88,9 @@ def main():
 
         # Print JSON to stdout
         print(json.dumps(response, indent=2))
-        sys.exit(0)
 
     except ValidationError as e:
         handle_error(e, StatusCode.VALIDATION_ERROR)
-
-    except APIError as e:
-        handle_error(e, StatusCode.API_ERROR)
 
     except Exception as e:
         handle_error(Exception(f"Unexpected error: {str(e)}"), StatusCode.API_ERROR)
