@@ -4,7 +4,6 @@ Checks reputation of multiple IP addresses using AbuseIPDB API.
 """
 
 import os
-import sys
 import json
 from ip_reputation.api.client import AbuseIPDBClient
 from ip_reputation.utils.error_handling import handle_error
@@ -18,7 +17,7 @@ from ip_reputation.constants import (
     MIN_CONFIDENCE_THRESHOLD,
     MAX_CONFIDENCE_THRESHOLD,
 )
-from ip_reputation.exceptions import ValidationError, APIError
+from ip_reputation.exceptions import ValidationError
 
 
 def read_and_validate_inputs() -> tuple[list[str], str, int]:

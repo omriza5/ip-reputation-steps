@@ -1,5 +1,4 @@
 import json
-import sys
 from ip_reputation.models import ErrorResponse, StepStatus
 from ip_reputation.constants import StatusMessage
 

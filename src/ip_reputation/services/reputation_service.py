@@ -184,7 +184,9 @@ class ReputationService:
         if summary.successful == 0:
             status_message = StatusMessage.FAILED.value
         else:
-            status_message = self._determine_status_message(summary.successful, len(api_errors))
+            status_message = self._determine_status_message(
+                summary.successful, len(api_errors)
+            )
 
         # Determine status code
         if summary.successful == 0:
