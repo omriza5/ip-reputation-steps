@@ -50,19 +50,16 @@ def read_and_validate_inputs() -> tuple[list[str], str, int]:
 
     # Validate and convert threshold
     try:
-        confidence_threshold = int(threshold_str)
-    except ValueError:
-        raise ValidationError(
-            f"CONFIDENCE_THRESHOLD must be a number, got: {threshold_str}"
+        confidence_threshold = validate_confidence_threshold(
+            threshold_str,
+            min_value=MIN_CONFIDENCE_THRESHOLD,
+            max_value=MAX_CONFIDENCE_THRESHOLD,
         )
+        
+        return ip_addresses, api_key, confidence_threshold
+    except ValidationError as e:
+           raise ValidationError(str(e))
 
-    confidence_threshold = validate_confidence_threshold(
-        confidence_threshold,
-        min_value=MIN_CONFIDENCE_THRESHOLD,
-        max_value=MAX_CONFIDENCE_THRESHOLD,
-    )
-
-    return ip_addresses, api_key, confidence_threshold
 
 
 def main():

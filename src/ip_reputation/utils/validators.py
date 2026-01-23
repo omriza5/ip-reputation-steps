@@ -35,13 +35,13 @@ def validate_ip_address(ip: str) -> str:
 
 
 def validate_confidence_threshold(
-    threshold: int, min_value: int = 25, max_value: int = 100
+    threshold, min_value: int = 25, max_value: int = 100
 ) -> int:
     """
     Validate confidence threshold value.
 
     Args:
-        threshold: The threshold value to validate
+        threshold: The threshold value to validate (can be str or int)
         min_value: Minimum allowed value (default: 25)
         max_value: Maximum allowed value (default: 100)
 
@@ -49,21 +49,23 @@ def validate_confidence_threshold(
         The validated threshold value
 
     Raises:
-        ValidationError: If threshold is out of valid range
+        ValidationError: If threshold is not a valid integer or out of range
     """
-    if not isinstance(threshold, int):
+    try:
+        threshold_int = int(threshold)
+    except (ValueError, TypeError):
         raise ValidationError(
-            f"Confidence threshold must be an integer, got {type(threshold).__name__}"
+            f"CONFIDENCE_THRESHOLD must be a number, got: {threshold}"
         )
 
-    if threshold < min_value:
+    if threshold_int < min_value:
         raise ValidationError(
-            f"Confidence threshold must be >= {min_value}, got {threshold}"
+            f"Confidence threshold must be >= {min_value}, got {threshold_int}"
         )
 
-    if threshold > max_value:
+    if threshold_int > max_value:
         raise ValidationError(
-            f"Confidence threshold must be <= {max_value}, got {threshold}"
+            f"Confidence threshold must be <= {max_value}, got {threshold_int}"
         )
 
-    return threshold
+    return threshold_int
