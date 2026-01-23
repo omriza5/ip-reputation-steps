@@ -4,7 +4,6 @@ Checks reputation of a single IP address using AbuseIPDB API.
 """
 
 import os
-import sys
 import json
 from ip_reputation.utils.error_handling import handle_error
 
@@ -50,19 +49,15 @@ def read_and_validate_inputs() -> tuple[str, str, int]:
 
     # Validate and convert threshold
     try:
-        confidence_threshold = int(threshold_str)
-    except ValueError:
-        raise ValidationError(
-            f"CONFIDENCE_THRESHOLD must be a number, got: {threshold_str}"
+        confidence_threshold = validate_confidence_threshold(
+            threshold_str,
+            min_value=MIN_CONFIDENCE_THRESHOLD,
+            max_value=MAX_CONFIDENCE_THRESHOLD,
         )
 
-    confidence_threshold = validate_confidence_threshold(
-        confidence_threshold,
-        min_value=MIN_CONFIDENCE_THRESHOLD,
-        max_value=MAX_CONFIDENCE_THRESHOLD,
-    )
-
-    return ip_address, api_key, confidence_threshold
+        return ip_address, api_key, confidence_threshold
+    except ValidationError as e:
+        raise ValidationError(str(e))
 
 
 def main():
@@ -83,7 +78,6 @@ def main():
         # Build and print success response
         response = reputation_service.build_single_ip_response(reputation_data)
         print(json.dumps(response, indent=2))
-        sys.exit(0)
 
     except ValidationError as e:
         handle_error(e, StatusCode.VALIDATION_ERROR)

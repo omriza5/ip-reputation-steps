@@ -73,7 +73,7 @@ class TestReadAndValidateInputs:
             "CONFIDENCE_THRESHOLD": "hello",
         }.get(key, default)
 
-        with pytest.raises(ValidationError, match="must be a number"):
+        with pytest.raises(ValidationError, match="must be an int"):
             read_and_validate_inputs()
 
     @patch("check_ip.main.os.getenv")
