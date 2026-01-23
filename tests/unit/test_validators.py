@@ -94,8 +94,8 @@ class TestValidateConfidenceThreshold:
 
     def test_non_integer_input(self):
         """Test non-integer input raises ValidationError."""
-        with pytest.raises(ValidationError, match="must be a number"):
+        with pytest.raises(ValidationError, match="must be an int"):
             validate_confidence_threshold("abc")
 
-        with pytest.raises(ValidationError, match="must be a number"):
+        with pytest.raises(ValidationError, match="must be an int"):
             validate_confidence_threshold(None)
