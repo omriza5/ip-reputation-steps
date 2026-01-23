@@ -211,3 +211,5 @@ allure-report/
 
 run_check_ip.sh
 run_check_ip_batch.sh
+
+.vscode
