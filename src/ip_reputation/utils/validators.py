@@ -55,7 +55,7 @@ def validate_confidence_threshold(
         threshold_int = int(threshold)
     except (ValueError, TypeError):
         raise ValidationError(
-            f"CONFIDENCE_THRESHOLD must be a number, got: {threshold}"
+            f"CONFIDENCE_THRESHOLD must be an int, got: {threshold}"
         )
 
     if threshold_int < min_value:

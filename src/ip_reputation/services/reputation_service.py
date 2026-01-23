@@ -109,8 +109,8 @@ class ReputationService:
                     "country_code": reputation_data.country_code,
                     "isp": reputation_data.isp,
                 }
-            except ValidationError:
-                validation_errors[ip] = "Invalid IP address format"
+            except ValidationError as e:
+                validation_errors[ip] = str(e)
             except APIError as e:
                 api_errors[ip] = str(e)
             except Exception as e:

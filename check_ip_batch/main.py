@@ -55,11 +55,10 @@ def read_and_validate_inputs() -> tuple[list[str], str, int]:
             min_value=MIN_CONFIDENCE_THRESHOLD,
             max_value=MAX_CONFIDENCE_THRESHOLD,
         )
-        
+
         return ip_addresses, api_key, confidence_threshold
     except ValidationError as e:
-           raise ValidationError(str(e))
-
+        raise ValidationError(str(e))
 
 
 def main():
