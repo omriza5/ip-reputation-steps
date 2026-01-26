@@ -20,6 +20,7 @@ from ip_reputation.constants import (
 from ip_reputation.utils.validators import validate_ip_address
 from ip_reputation.exceptions import ValidationError, APIError
 
+
 class ReputationService:
     """Service for checking IP reputation and calculating risk levels."""
 
