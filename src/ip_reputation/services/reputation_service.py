@@ -3,13 +3,22 @@ Reputation service for IP address risk assessment.
 """
 
 from ip_reputation.api.client import AbuseIPDBClient
-from ip_reputation.models import ReputationData
-from ip_reputation.constants import RiskLevel, RISK_THRESHOLD_MEDIUM
+from ip_reputation.models import (
+    ReputationData,
+    StepStatus,
+    SingleIPResponse,
+    BatchSummary,
+    BatchAPIObject,
+    BatchIPResponse,
+)
+from ip_reputation.constants import (
+    RiskLevel,
+    RISK_THRESHOLD_MEDIUM,
+    StatusCode,
+    StatusMessage,
+)
 from ip_reputation.utils.validators import validate_ip_address
 from ip_reputation.exceptions import ValidationError, APIError
-from ip_reputation.models import StepStatus, SingleIPResponse
-from ip_reputation.constants import StatusCode, StatusMessage
-
 
 class ReputationService:
     """Service for checking IP reputation and calculating risk levels."""
@@ -132,15 +141,21 @@ class ReputationService:
             "risk_counts": risk_counts,
         }
 
-    def _determine_status_message(self, successful: int, failed: int) -> str:
-        from ip_reputation.constants import StatusMessage
-
+    def _determine_status_message(
+        self,
+        successful: int,
+        failed: int,
+        api_error_count: int,
+    ) -> str:
         if failed == 0:
             return StatusMessage.SUCCESS.value
         elif successful == 0:
             return StatusMessage.FAILED.value
-        else:
+        elif api_error_count > 0:
             return StatusMessage.PARTIAL_SUCCESS.value
+        else:
+            # Only validation errors present, treat as success
+            return StatusMessage.SUCCESS.value
 
     def build_single_ip_response(self, reputation_data: ReputationData) -> dict:
         """
@@ -168,25 +183,15 @@ class ReputationService:
         api_errors: dict[str, str],
         total: int,
     ) -> dict[str, any]:
-        from ip_reputation.models import (
-            BatchSummary,
-            BatchAPIObject,
-            BatchIPResponse,
-            StepStatus,
-        )
-        from ip_reputation.constants import StatusCode
-
         all_errors = {**validation_errors, **api_errors}
         summary_dict = self._calculate_summary(total, results, all_errors)
         summary = BatchSummary(**summary_dict)
 
-        # Determine status message
-        if summary.successful == 0:
-            status_message = StatusMessage.FAILED.value
-        else:
-            status_message = self._determine_status_message(
-                summary.successful, len(api_errors)
-            )
+        status_message = self._determine_status_message(
+            summary.successful,
+            summary.failed,
+            len(api_errors),
+        )
 
         # Determine status code
         if summary.successful == 0:

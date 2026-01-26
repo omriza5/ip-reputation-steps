@@ -142,15 +142,15 @@ class TestDetermineStatusMessage:
 
     def test_success(self):
         service = ReputationService(api_client=None)
-        assert service._determine_status_message(3, 0) == "success"
+        assert service._determine_status_message(3, 0, 0) == "success"
 
     def test_partial_success(self):
         service = ReputationService(api_client=None)
-        assert service._determine_status_message(2, 1) == "partial_success"
+        assert service._determine_status_message(2, 1, 1) == "partial_success"
 
     def test_failed(self):
         service = ReputationService(api_client=None)
-        assert service._determine_status_message(0, 2) == "failed"
+        assert service._determine_status_message(0, 2, 2) == "failed"
 
 
 class TestBuildResponse:
