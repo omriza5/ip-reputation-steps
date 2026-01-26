@@ -157,6 +157,21 @@ class ReputationService:
             # Only validation errors present, treat as success
             return StatusMessage.SUCCESS.value
 
+    def _determine_status_code(
+        self,
+        successful: int,
+        api_error_count: int,
+    ) -> int:
+        if successful == 0:
+            if api_error_count > 0:
+                return StatusCode.API_ERROR.value
+            else:
+                return StatusCode.VALIDATION_ERROR.value
+        elif api_error_count == 0:
+            return StatusCode.SUCCESS.value
+        else:
+            return StatusCode.SUCCESS.value
+
     def build_single_ip_response(self, reputation_data: ReputationData) -> dict:
         """
         Build success JSON response for a single IP.
@@ -193,16 +208,10 @@ class ReputationService:
             len(api_errors),
         )
 
-        # Determine status code
-        if summary.successful == 0:
-            if len(api_errors) > 0:
-                status_code = StatusCode.API_ERROR.value
-            else:
-                status_code = StatusCode.VALIDATION_ERROR.value
-        elif len(api_errors) == 0:
-            status_code = StatusCode.SUCCESS.value
-        else:
-            status_code = StatusCode.SUCCESS.value
+        status_code = self._determine_status_code(
+            summary.successful,
+            len(api_errors),
+        )
 
         response = BatchIPResponse(
             step_status=StepStatus(
